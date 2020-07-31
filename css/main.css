@@ -91,6 +91,14 @@ select option.used {
 	color: #CCCCCC;
 }
 
+.door-label-one {
+	color: #DDD;
+}
+
+.door-label-two {
+	color: #AAA;
+}
+
 .oneway select {
 	background: #999999;
 	color: #000000;

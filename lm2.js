@@ -393,6 +393,10 @@ function buildTracker()
 	icon.classList.add('icon');
 	icon.appendChild(document.createTextNode("(?)"));
 
+	// Stored the last field for label coloring
+	let lastField = '';
+	let isEvenField = true;
+
 	for (let entrance of ENTRANCES)
 	{
 		if (entrance.type !== Direction.UNIQUE || showUnique) {
@@ -401,6 +405,19 @@ function buildTracker()
 			let label = document.createElement('label');
 			label.appendChild(document.createTextNode(entrance.display));
 			label.appendChild(icon.cloneNode(true));
+
+			let thisField = entrance.field.split('-')[0];
+			if (thisField != lastField) {
+				lastField = thisField;
+				isEvenField = !isEvenField;
+			}
+			let labelClass = 'door-label-';
+			if (isEvenField) {
+				labelClass += 'two';
+			} else {
+				labelClass += 'one';
+			}
+			label.classList.add(labelClass);
 	
 			let select = document.createElement('select');
 			let option = document.createElement('option');
