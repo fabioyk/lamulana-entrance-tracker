@@ -7,6 +7,7 @@ const Direction =
 	UP: 'up',
 	DOWN: 'down',
 	GATE: 'gate',
+	UNIQUE: 'unique',
 };
 
 const DIRECTION_MATCH = new Map(
@@ -16,6 +17,7 @@ const DIRECTION_MATCH = new Map(
 	[Direction.UP, Direction.DOWN],
 	[Direction.DOWN, Direction.UP],
 	[Direction.GATE, Direction.GATE],
+	[Direction.UNIQUE, Direction.UNIQUE],
 ]);
 
 const ENTRANCES =
@@ -48,7 +50,9 @@ const ENTRANCES =
 	{"name": "annwfn-main-top", "display": "Annwfn Main Ladder Up (C-1)", "oneway": false, "field": "Annwfn", "type": Direction.UP, "logname": "Annwfn Ladder (C-1)"},
 	{"name": "annwfn-bottom", "display": "Annwfn Bottom One-Way Ladder (F-1)", "oneway": true, "field": "Annwfn", "type": Direction.DOWN, "logname": "Annwfn Bottom (E-5)"},
 	{"name": "annwfn-br-gate", "display": "Annwfn Bottom Right Gate (G-4)", "oneway": false, "field": "Annwfn-Lower", "type": Direction.GATE, "logname": "Annwfn Gate (G-4)"},
+	{"name": "annwfn-hole", "display": "Annwfn Bifrost Hole (C-5)", "oneway": false, "field": "Annwfn", "type": Direction.UNIQUE, "logname": "Annwfn Bifrost (C-5)"},
 
+	{"name": "ib-top-hole", "display": "Imm Battlefield Hole Entrance (D-1)", "oneway": true, "field": "Battlefield", "type": Direction.UNIQUE, "logname": "Immortal Battlefield Hole Entrance (D-1)"},
 	{"name": "ib-left-gate", "display": "Imm Battlefield Left Side Gate (A-6)", "oneway": false, "field": "Battlefield-Left", "type": Direction.GATE, "logname": "Immortal Battlefield Gate (A-6)"},
 	{"name": "ib-top", "display": "Imm Battlefield Cetas Ladder Up (F-1)", "oneway": false, "field": "Battlefield", "type": Direction.UP, "logname": "Immortal Battlefield Up Ladder (F-1)"},
 	{"name": "ib-right", "display": "Imm Battlefield Right (H-4)", "oneway": false, "field": "Battlefield", "type": Direction.RIGHT, "logname": "Immortal Battlefield Right Door (H-4)"},
@@ -68,10 +72,14 @@ const ENTRANCES =
 
 	{"name": "gotd-4switches-gate", "display": "Gate of the Dead 4 Switches Gate (F-5)", "oneway": false, "field": "GOTD", "type": Direction.GATE, "logname": "Gate of the Dead Gate (F-5)"},
 	{"name": "taka-bottom-gate", "display": "Takamagahara Shrine Bottom Gate (C-7)", "oneway": false, "field": "Takamagahara", "type": Direction.GATE, "logname": "Takamagahara Shrine Gate (C-7)"},
+	{"name": "taka-hole", "display": "Takamagahara Shrine Hole (F-3)", "oneway": false, "field": "Takamagahara", "type": Direction.UNIQUE, "logname": "Takamagahara Shrine Hole (F-3)"},
 	{"name": "hlab-chaos-gate", "display": "Heaven's Labyrinth Gate near Chaos (D-1)", "oneway": false, "field": "Heaven", "type": Direction.GATE, "logname": "Heavens Labyrinth Gate (D-1)"},
+	{"name": "hlab-twin-vessel", "display": "Heaven's Labyrinth Twin Vessel (A-5)", "oneway": true, "field": "Heaven", "type": Direction.UNIQUE, "logname": "Heavens Labyrinth Twin Vessel (A-5)"},
 
 	{"name": "valhalla-gate", "display": "Valhalla Main Gate (A-2)", "oneway": false, "field": "Valhalla", "type": Direction.GATE, "logname": "Valhalla Gate (A-2)"},
 	{"name": "dslm-main-gate", "display": "Dark Star Lord's Maus Main Gate (D-7)", "oneway": false, "field": "DSLM", "type": Direction.GATE, "logname": "Dark Star Lord's Mausoleum Gate (D-7)"},
+	{"name": "dslm-pyramid", "display": "Dark Star Lord's Maus Pyramid (E-3)", "oneway": false, "field": "DSLM", "type": Direction.UNIQUE, "logname": "Dark Star Lord's Mausoleum Pyramid (E-3)"},
+	{"name": "nibiru-gate", "display": "Nibiru Gate", "oneway": false, "field": "Nibiru", "type": Direction.UNIQUE, "logname": "Nibiru Gate"},
 	{"name": "chaos-main-gate", "display": "Ancient Chaos Main Gate (D-6)", "oneway": false, "field": "Chaos", "type": Direction.GATE, "logname": "Ancient Chaos Gate (D-6)"},
 	{"name": "malice-top-gate", "display": "Hall of Malice Top Gate (C-1)", "oneway": false, "field": "Malice-Top", "type": Direction.GATE, "logname": "Hall of Malice Gate (C-1)"},
 
@@ -216,8 +224,7 @@ function updateAccessibleExits()
 		option.classList.remove('accessible');
 
 	let edges = new Map(
-	[
-		['Annwfn', [{to: 'Battlefield', via: "Bifrost (C-5)"}]],
+	[		
 		['Annwfn-Lower', [{to: 'Annwfn', via: null}]],
 		['Battlefield-Left', [{to: 'Battlefield', via: null}]],
 		['Battlefield-Boat', [{to: 'Battlefield', via: null}]],
@@ -269,6 +276,10 @@ function updateAccessibleExits()
 			{to: 'Eternal-Prison', via: 'Corridor of Blood (F-5)'},
 		]],
 	]);
+
+	if (!document.querySelector('#unique-transition-shuffle').checked) {
+		edges.set('Annwfn', [{to: 'Battlefield', via: "Bifrost (C-5)"}])
+	}
 
 	let checkeddoors = new Set();
 	for (let select of document.querySelectorAll('#soul-list select.doomatch'))
@@ -371,42 +382,51 @@ function buildTracker()
 
 	let allowAny = !!document.querySelector('#full-rando').checked;
 
+	// Show Unique Transition checkbox if Full Rando is enabled
+	if (!allowAny) {
+		document.querySelector('#unique-transition-shuffle').checked = false;
+	}
+	document.querySelector('#unique-transition-input').style.display = allowAny ? '' : 'none';
+	let showUnique = !!document.querySelector('#unique-transition-shuffle').checked;
+
 	let icon = document.createElement('span');
 	icon.classList.add('icon');
 	icon.appendChild(document.createTextNode("(?)"));
 
 	for (let entrance of ENTRANCES)
 	{
-		let div = document.createElement('div');
-		//if (entrance.oneway) div.classList.add('oneway');
-		let label = document.createElement('label');
-		label.appendChild(document.createTextNode(entrance.display));
-		label.appendChild(icon.cloneNode(true));
-
-		let select = document.createElement('select');
-		let option = document.createElement('option');
-		option.setAttribute('value', '');
-		option.appendChild(document.createTextNode(''));
-		//if (entrance.oneway) select.setAttribute('disabled', true);
-		select.appendChild(option);
-
-		for (let exit of ENTRANCES)
-		{
-			if (entrancesMatch(entrance, exit, allowAny) && entrance != exit)
+		if (entrance.type !== Direction.UNIQUE || showUnique) {
+			let div = document.createElement('div');
+			//if (entrance.oneway) div.classList.add('oneway');
+			let label = document.createElement('label');
+			label.appendChild(document.createTextNode(entrance.display));
+			label.appendChild(icon.cloneNode(true));
+	
+			let select = document.createElement('select');
+			let option = document.createElement('option');
+			option.setAttribute('value', '');
+			option.appendChild(document.createTextNode(''));
+			//if (entrance.oneway) select.setAttribute('disabled', true);
+			select.appendChild(option);
+	
+			for (let exit of ENTRANCES)
 			{
-				option = document.createElement('option');
-				option.setAttribute('value', exit.name);
-				option.appendChild(document.createTextNode(exit.display));
-				select.appendChild(option);
+				if (entrancesMatch(entrance, exit, allowAny) && entrance != exit && (exit.type !== Direction.UNIQUE || showUnique))
+				{
+					option = document.createElement('option');
+					option.setAttribute('value', exit.name);
+					option.appendChild(document.createTextNode(exit.display));
+					select.appendChild(option);
+				}
 			}
-		}
-		select.setAttribute('id', entrance.name);
-		select.oldvalue = '';
-		select.onchange = changeEntranceEvent;
-
-		div.appendChild(select);
-		div.appendChild(label);
-		document.querySelector('#entrance-list').appendChild(div);
+			select.setAttribute('id', entrance.name);
+			select.oldvalue = '';
+			select.onchange = changeEntranceEvent;
+	
+			div.appendChild(select);
+			div.appendChild(label);
+			document.querySelector('#entrance-list').appendChild(div);
+		}		
 	}
 
 	let soulselect = document.createElement('select');
@@ -467,6 +487,7 @@ function buildTracker()
 
 buildTracker();
 document.querySelector('#full-rando').onchange = buildTracker;
+document.querySelector('#unique-transition-shuffle').onchange = buildTracker;
 
 function __addConnection(map, a1, a2)
 {
